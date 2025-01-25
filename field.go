@@ -10,12 +10,13 @@ const (
 )
 
 // Field database type.
-type FieldDBType string
+type FieldDB string
 
 // Field model.
 type Field struct {
-	DB   FieldDBType
-	Type FieldType
+	DB     FieldDB
+	Type   FieldType
+	Ignore []QueryBuilderType // Ignore query builder types.
 }
 
 // NewField creates new Field model from given names.
@@ -32,7 +33,7 @@ func NewField(names ...any) *Field {
 	// extract names
 	for _, name := range names {
 		switch name := name.(type) {
-		case FieldDBType:
+		case FieldDB:
 			f.DB = name
 		}
 	}
@@ -64,6 +65,12 @@ func NewSumField(field *Field) *Field {
 	}
 }
 
+// NewCountField creates a new Field model with count type.
+//
+// It takes the existing Field model and creates a new one with the same
+// DB field and with Type set to FieldCount.
+//
+// Returns created Field model with count type.
 func NewCountField(field *Field) *Field {
 	return &Field{
 		DB:   field.DB,

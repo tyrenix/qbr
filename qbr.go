@@ -1,14 +1,22 @@
 package qbr
 
+// Query builder annotation.
+type QueryBuilderAnnotationType string
+
+const (
+	QueryBuilderIgnore QueryBuilderAnnotationType = "qbrIgnore"
+	QueryBuilderDB     QueryBuilderAnnotationType = "db"
+)
+
 // Query builder type.
-type QueryBuilderType int
+type QueryBuilderType string
 
 // Query builder types.
 const (
-	QueryBuilderCreate QueryBuilderType = iota
-	QueryBuilderRead
-	QueryBuilderUpdate
-	QueryBuilderDelete
+	QueryBuilderCreate QueryBuilderType = "create"
+	QueryBuilderRead   QueryBuilderType = "read"
+	QueryBuilderUpdate QueryBuilderType = "update"
+	QueryBuilderDelete QueryBuilderType = "delete"
 )
 
 // Query builder model.
