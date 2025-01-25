@@ -1,3 +1,3 @@
-module github.com/tyrenix/goqrb
+module github.com/tyrenix/goqbr
 
 go 1.23.3
