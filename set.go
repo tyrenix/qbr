@@ -23,11 +23,18 @@ func (qb *QueryBuilder) Set(data ...*Data) *QueryBuilder {
 		}
 
 		// check is ignore
+		skip := false
 		for _, i := range d.Field.Ignore {
 			// this ignored, skip
 			if i == qb.queryType {
-				continue
+				skip = true
+				break
 			}
+		}
+
+		// if skip
+		if skip {
+			continue
 		}
 
 		// add data
@@ -38,11 +45,23 @@ func (qb *QueryBuilder) Set(data ...*Data) *QueryBuilder {
 	return qb
 }
 
-// SetStruct adds the specified struct's fields to the query builder's data list.
-// If the struct is a pointer, it is dereferenced first.
-// If the struct contains a field with a tag "db" and the field is not nil, it is added.
+// SetStruct adds the specified struct fields to the query builder's data list.
+// If a field's value is nil, it is ignored and not added.
 // Returns the modified QueryBuilder instance for method chaining.
 func (qb *QueryBuilder) SetStruct(s any) *QueryBuilder {
+	// extract data from struct
+	data := extractDataFromStruct(s)
+	// set data to query builder
+	return qb.Set(data...)
+}
+
+// extractDataFromStruct extracts fields from a given struct and returns them as a slice of Data.
+// If the input is a pointer, it dereferences it before processing. The function checks if the input
+// is a valid struct type and iterates through its fields. For each field, it retrieves the field's
+// value and annotation, and constructs a Data object. Fields with a nil value or that do not have
+// a "db" annotation are ignored. The resulting slice of Data objects is returned, representing the
+// struct's fields ready for inclusion in a query builder.
+func extractDataFromStruct(s any) []*Data {
 	// struct value
 	val := reflect.ValueOf(s)
 	// struct type
@@ -52,7 +71,7 @@ func (qb *QueryBuilder) SetStruct(s any) *QueryBuilder {
 	if val.Kind() == reflect.Ptr {
 		// check is nil
 		if val.IsNil() {
-			return qb
+			return nil
 		}
 
 		// dereference pointer
@@ -62,8 +81,11 @@ func (qb *QueryBuilder) SetStruct(s any) *QueryBuilder {
 
 	// check is struct
 	if val.Kind() != reflect.Struct {
-		return qb
+		return nil
 	}
+
+	// create data slice
+	var data []*Data
 
 	// we go through the fields of the structure
 	for i := 0; i < val.NumField(); i++ {
@@ -72,15 +94,15 @@ func (qb *QueryBuilder) SetStruct(s any) *QueryBuilder {
 		// field type
 		ft := t.Field(i)
 
-		// set data
-		qb.Set(NewData(
+		// add data
+		data = append(data, NewData(
 			extractFieldFromStructAnnotation(ft),
 			field.Interface(),
 		))
 	}
 
 	// return query builder
-	return qb
+	return data
 }
 
 // NewData creates a new Data instance with the specified field and value.

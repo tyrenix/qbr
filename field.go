@@ -5,6 +5,7 @@ type FieldType int
 
 const (
 	FieldDefault FieldType = iota
+	FieldAll
 	FieldCount
 	FieldSum
 )
@@ -19,22 +20,22 @@ type Field struct {
 	Ignore []QueryBuilderType // Ignore query builder types.
 }
 
-// NewField creates new Field model from given names.
-//
-// NewField accepts variable arguments of FieldDBType and FieldJSONType.
-// It iterates over the arguments and sets DB and JSON fields of the model.
-// If the argument is not recognized, it skips it.
-//
-// Returns created Field model.
-func NewField(names ...any) *Field {
+// NewField creates a new Field instance with the specified database field name and ignore types.
+// It takes a variable number of arguments, which can be any of the following:
+// FieldDB: the database field name.
+// QueryBuilderType: the query type to ignore.
+// The function returns the newly created Field model.
+func NewField(params ...any) *Field {
 	// field model
 	f := &Field{Type: FieldDefault}
 
 	// extract names
-	for _, name := range names {
-		switch name := name.(type) {
+	for _, param := range params {
+		switch param := param.(type) {
 		case FieldDB:
-			f.DB = name
+			f.DB = param
+		case QueryBuilderType:
+			f.Ignore = append(f.Ignore, param)
 		}
 	}
 
@@ -48,7 +49,7 @@ func NewField(names ...any) *Field {
 func NewAllField() *Field {
 	return &Field{
 		DB:   "*",
-		Type: FieldDefault,
+		Type: FieldAll,
 	}
 }
 

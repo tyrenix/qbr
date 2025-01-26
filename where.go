@@ -110,17 +110,52 @@ func GtOrEq(field *Field, val any) Condition {
 
 // Where add filters with condition.
 func (qb *QueryBuilder) Where(conds ...Condition) *QueryBuilder {
-	// add filters with condition to query
-	for _, cond := range conds {
-		// check is value is nil
-		if isZero(cond.Value) {
-			continue
-		}
-
-		// add condition
-		qb.conditions = append(qb.conditions, cond)
-	}
+	// add remove zero condition s
+	qb.conditions = append(
+		qb.conditions,
+		removeZeroCondition(conds...)...,
+	)
 
 	// return query builder
 	return qb
+}
+
+// removeZeroCondition filters out conditions that have zero values from the provided
+// slice of conditions. It recursively processes nested conditions and removes any
+// condition with a zero value, as determined by the isZero function. The function
+// returns a slice of conditions that do not contain any zero values.
+func removeZeroCondition(conds ...Condition) []Condition {
+	// conditions for return
+	result := []Condition{}
+
+	// stack
+	stack := append([]Condition{}, conds...)
+
+	// check all conditions
+	for len(stack) > 0 {
+		// condition
+		cond := stack[0]
+		// remove condition from stack
+		stack = stack[1:]
+
+		// select condition type
+		switch v := cond.Value.(type) {
+		case []Condition:
+			// set new removed conditions
+			cond.Value = removeZeroCondition(v...)
+
+			// add formatted conditions
+			result = append(result, cond)
+		default:
+			// check is not zero
+			if !isZero(v) {
+				// add condition
+				result = append(result, cond)
+			}
+		}
+
+	}
+
+	// return conditions
+	return result
 }

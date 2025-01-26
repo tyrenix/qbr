@@ -14,6 +14,15 @@ const (
 	ToSqlQuestion ToSqlPlaceholder = "?"
 )
 
+// sqlFieldFormats is a map that defines SQL formatting for different FieldTypes.
+// It currently supports COUNT and SUM operations on fields.
+var sqlFieldFormats = map[FieldType]string{
+	FieldDefault: "%s",
+	FieldAll:     "%s",
+	FieldCount:   "COUNT(%s)",
+	FieldSum:     "SUM(%s)",
+}
+
 // ToSql create sql query.
 func (qb *QueryBuilder) ToSql(table string, placeholder ToSqlPlaceholder) (string, []any, error) {
 	// select need method for build
@@ -44,7 +53,7 @@ func (qb *QueryBuilder) toInsertSql(table string, placeholder ToSqlPlaceholder) 
 		columns = append(columns, getDBFieldName(data.Field))
 
 		// add value
-		values = append(values, createPlaceholder(placeholder, len(params)+1))
+		values = append(values, buildPlaceholder(placeholder, len(params)+1))
 
 		// add params
 		params = append(params, data.Value)
@@ -69,7 +78,7 @@ func (qb *QueryBuilder) toSelectSql(table string, placeholder ToSqlPlaceholder) 
 	// create main query
 	query := fmt.Sprintf(
 		"SELECT %s FROM %s",
-		formatSelectFields(qb.selects), // create select query
+		buildSelectFields(qb.selects), // create select query
 		table,
 	)
 
@@ -77,7 +86,7 @@ func (qb *QueryBuilder) toSelectSql(table string, placeholder ToSqlPlaceholder) 
 	var params []any
 
 	// add conditions
-	cond, condParams, err := toSqlConditions(qb.conditions, placeholder, nil)
+	cond, condParams, err := buildSqlConditions(qb.conditions, placeholder, nil)
 	if err != nil {
 		return "", nil, err
 	}
@@ -105,7 +114,7 @@ func (qb *QueryBuilder) toSelectSql(table string, placeholder ToSqlPlaceholder) 
 	}
 
 	// add limit and offset
-	if v := toSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
+	if v := buildSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
 		// add limit and offset
 		query += " " + v
 	}
@@ -114,6 +123,8 @@ func (qb *QueryBuilder) toSelectSql(table string, placeholder ToSqlPlaceholder) 
 	return query, params, nil
 }
 
+// toUpdateSql creates a SQL UPDATE query from the QueryBuilder's data. It returns the query string,
+// the parameters for the query, and an error if the query could not be built.
 func (qb *QueryBuilder) toUpdateSql(table string, placeholder ToSqlPlaceholder) (string, []any, error) {
 	var sets []string
 	var params []any
@@ -128,7 +139,7 @@ func (qb *QueryBuilder) toUpdateSql(table string, placeholder ToSqlPlaceholder) 
 			sets,
 			fmt.Sprintf("%s = %s",
 				getDBFieldName(data.Field),
-				createPlaceholder(placeholder, len(params)+1),
+				buildPlaceholder(placeholder, len(params)+1),
 			),
 		)
 
@@ -142,7 +153,7 @@ func (qb *QueryBuilder) toUpdateSql(table string, placeholder ToSqlPlaceholder) 
 	// if exists conditions add to query
 	if len(qb.conditions) > 0 {
 		// create conditions
-		conds, condsParams, err := toSqlConditions(qb.conditions, placeholder, params)
+		conds, condsParams, err := buildSqlConditions(qb.conditions, placeholder, params)
 		if err != nil {
 			return "", nil, err
 		}
@@ -154,7 +165,7 @@ func (qb *QueryBuilder) toUpdateSql(table string, placeholder ToSqlPlaceholder) 
 	}
 
 	// add limit and offset
-	if v := toSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
+	if v := buildSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
 		// add limit and offset
 		query += " " + v
 	}
@@ -174,7 +185,7 @@ func (qb *QueryBuilder) toDeleteSql(table string, placeholder ToSqlPlaceholder) 
 	// if exists conditions add to query
 	if len(qb.conditions) > 0 {
 		// create conditions
-		conds, condsParams, err := toSqlConditions(qb.conditions, placeholder, nil)
+		conds, condsParams, err := buildSqlConditions(qb.conditions, placeholder, nil)
 		if err != nil {
 			return "", nil, err
 		}
@@ -186,7 +197,7 @@ func (qb *QueryBuilder) toDeleteSql(table string, placeholder ToSqlPlaceholder) 
 	}
 
 	// add limit and offset
-	if v := toSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
+	if v := buildSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
 		// add limit and offset
 		query += " " + v
 	}
@@ -195,7 +206,9 @@ func (qb *QueryBuilder) toDeleteSql(table string, placeholder ToSqlPlaceholder) 
 	return query, params, nil
 }
 
-func toSqlLimitAndOffset(limit, offset uint64) string {
+// buildSqlLimitAndOffset creates a LIMIT and OFFSET SQL clause from the given limit and offset values.
+// It returns the clause string.
+func buildSqlLimitAndOffset(limit, offset uint64) string {
 	// sql query
 	query := ""
 
@@ -213,11 +226,11 @@ func toSqlLimitAndOffset(limit, offset uint64) string {
 	return strings.TrimSpace(query)
 }
 
-// toSqlConditions translates a condition slice to a SQL query string and its params.
+// buildSqlConditions translates a condition slice to a SQL query string and its params.
 // plc is the placeholder character to use, and params is the parameter slice to append to.
 // join is the operator to use to join the condition strings, default is "AND".
 // It returns the query string, the updated parameter slice, and an error if any.
-func toSqlConditions(conds []Condition, plc ToSqlPlaceholder, params []any, join ...string) (string, []any, error) {
+func buildSqlConditions(conds []Condition, plc ToSqlPlaceholder, params []any, join ...string) (string, []any, error) {
 	// check check conditions count
 	if len(conds) == 0 {
 		return "", nil, nil
@@ -294,7 +307,7 @@ func handleLogicalCondition(cond Condition, params []any, plc ToSqlPlaceholder, 
 	}
 
 	// create sub query
-	subQuery, subParams, err := toSqlConditions(value, plc, params, subJoin)
+	subQuery, subParams, err := buildSqlConditions(value, plc, params, subJoin)
 	if err != nil {
 		return "", nil, err
 	}
@@ -319,13 +332,8 @@ func handleSimpleCondition(cond Condition, plc ToSqlPlaceholder, paramIndex int)
 		return "", nil, fmt.Errorf("unsupported operator: %d", cond.Operator)
 	}
 
-	// check is value is zero
-	if isZero(cond.Value) {
-		return "", nil, nil
-	}
-
 	// create placeholder
-	placeholder := createPlaceholder(plc, paramIndex)
+	placeholder := buildPlaceholder(plc, paramIndex)
 	// create condition
 	conditionStr := fmt.Sprintf("%s %s %s", getDBFieldName(cond.Field), operator, placeholder)
 
@@ -354,33 +362,32 @@ func getSqlOperator(op ConditionType) string {
 	}
 }
 
-// formatSelectFields formats a slice of Field objects into a SQL select string.
-// It generates SQL expressions based on the Field type, such as SUM or COUNT
-// for aggregation fields, and returns the fields as a comma-separated string.
-//
-// The function iterates over the slice of fields and formats each field based on
-// its type. Non-aggregation fields are formatted as a simple field name. Aggregation
-// fields are formatted as a SQL expression.
-func formatSelectFields(fields []Field) string {
+// buildSelectFields formats a slice of Field objects into a SQL select statement string.
+// It iterates over the provided fields, and for each field, it checks if there is an
+// associated SQL format in the sqlFieldFormats map based on the field's type. If a format
+// exists, it retrieves the database field name and applies the format, adding the result
+// to the list of select fields. The function returns a comma-separated string of the
+// formatted select fields.
+func buildSelectFields(fields []Field) string {
 	// fields
 	var result []string
 
 	// iterate over the slice of fields
 	for _, field := range fields {
-		fname := getDBFieldName(&field)
-
-		// format the field based on its type
-		switch field.Type {
-		case FieldSum:
-			// format the field as a SUM expression
-			fname = fmt.Sprintf("SUM(%s)", fname)
-		case FieldCount:
-			// format the field as a COUNT expression
-			fname = fmt.Sprintf("COUNT(%s)", fname)
+		// check is contains in map
+		format, ok := sqlFieldFormats[field.Type]
+		if !ok {
+			continue
 		}
 
 		// append the formatted field to the result slice
-		result = append(result, fname)
+		result = append(
+			result,
+			fmt.Sprintf(
+				format,
+				getDBFieldName(&field), // get database field name
+			), // create field name
+		)
 	}
 
 	// return the fields as a comma-separated string
@@ -393,11 +400,11 @@ func getDBFieldName(field *Field) string {
 	return string(field.DB)
 }
 
-// createPlaceholder generates a SQL placeholder string based on the specified
+// buildPlaceholder generates a SQL placeholder string based on the specified
 // placeholder type and index. If the placeholder type is ToSqlDollar, it returns
 // a parameterized string using the dollar sign format (e.g., $1, $2). Otherwise,
 // it returns the placeholder type as a string.
-func createPlaceholder(plc ToSqlPlaceholder, index int) string {
+func buildPlaceholder(plc ToSqlPlaceholder, index int) string {
 	// dollar placeholder
 	if plc == ToSqlDollar {
 		return fmt.Sprintf("$%d", index)
