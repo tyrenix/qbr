@@ -1,6 +1,6 @@
 # Query Builder (qbr)
 
-`qbr` is a flexible and lightweight multi-purpose query builder for constructing various types of queries. Currently, it supports ```SQL``` queries, but it is designed to be extensible for other query types in the future. It allows you to build SELECT, INSERT, UPDATE, and DELETE queries with complex conditions, sorting, and pagination.
+`qbr` is a flexible and lightweight multi-purpose query builder for constructing various types of queries. Currently, it supports `SQL` queries, but it is designed to be extensible for other query types in the future. It allows you to build SELECT, INSERT, UPDATE, and DELETE queries with complex conditions, sorting, and pagination.
 
 ## Installation
 
@@ -12,7 +12,7 @@ go get -u github.com/tyrenix/goqbr
 
 ## Quick Start
 
-Here's a simple example of how to use ```qbr``` to build a SELECT query:
+Here's a simple example of how to use `qbr` to build a SELECT query:
 
 ```go
 package main
