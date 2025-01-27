@@ -7,7 +7,7 @@
 To install `qbr`, use the following command:
 
 ```bash
-go get -u github.com/tyrenix/goqbr
+go get -u github.com/tyrenix/qbr
 ```
 
 ## Quick Start
@@ -19,7 +19,7 @@ package main
 
 import (
     "fmt"
-    qbr "github.com/tyrenix/goqbr"
+    qbr "github.com/tyrenix/qbr"
 )
 
 func main() {
@@ -49,7 +49,7 @@ func main() {
 
 ## Documentation
 
-For detailed documentation, including API reference and additional examples, visit the official documentation on [pkg.go.dev](https://pkg.go.dev/github.com/tyrenix/goqbr).
+For detailed documentation, including API reference and additional examples, visit the official documentation on [pkg.go.dev](https://pkg.go.dev/github.com/tyrenix/qbr).
 
 ## Roadmap
 
@@ -61,4 +61,4 @@ For detailed documentation, including API reference and additional examples, vis
     * Add more advanced query building features.
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/tyrenix/goqbr/blob/master/LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/tyrenix/qbr/blob/master/LICENSE) file for details.
