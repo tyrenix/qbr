@@ -19,7 +19,7 @@ package main
 
 import (
     "fmt"
-    "github.com/tyrenix/qbr"
+    qbr "github.com/tyrenix/goqbr"
 )
 
 func main() {
