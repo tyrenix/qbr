@@ -1,7 +1,9 @@
 package qbr
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -67,10 +69,10 @@ func (qb *QueryBuilder) toInsertSql(table string, placeholder SqlPlaceholder) (s
 		columns = append(columns, getDBFieldName(data.Field))
 
 		// add value
-		values = append(values, buildPlaceholder(placeholder, len(params)+1))
+		values = append(values, buildDBPlaceholder(placeholder, len(params)+1))
 
 		// add params
-		params = append(params, data.Value)
+		params = append(params, valueToDBValue(data.Value))
 	}
 
 	// create query
@@ -159,12 +161,12 @@ func (qb *QueryBuilder) toUpdateSql(table string, placeholder SqlPlaceholder) (s
 			sets,
 			fmt.Sprintf("%s = %s",
 				getDBFieldName(data.Field),
-				buildPlaceholder(placeholder, len(params)+1),
+				buildDBPlaceholder(placeholder, len(params)+1),
 			),
 		)
 
 		// add params
-		params = append(params, data.Value)
+		params = append(params, valueToDBValue(data.Value))
 	}
 
 	// add to query set data
@@ -358,7 +360,7 @@ func handleSimpleCondition(cond Condition, plc SqlPlaceholder, paramIndex int) (
 	}
 
 	// create placeholder
-	placeholder := buildPlaceholder(plc, paramIndex)
+	placeholder := buildDBPlaceholder(plc, paramIndex)
 	// create condition
 	conditionStr := fmt.Sprintf("%s %s %s", getDBFieldName(cond.Field), operator, placeholder)
 
@@ -421,7 +423,7 @@ func getDBFieldName(field *Field) string {
 // placeholder type and index. If the placeholder type is ToSqlDollar, it returns
 // a parameterized string using the dollar sign format (e.g., $1, $2). Otherwise,
 // it returns the placeholder type as a string.
-func buildPlaceholder(plc SqlPlaceholder, index int) string {
+func buildDBPlaceholder(plc SqlPlaceholder, index int) string {
 	// dollar placeholder
 	if plc == SqlDollar {
 		return fmt.Sprintf("$%d", index)
@@ -429,4 +431,30 @@ func buildPlaceholder(plc SqlPlaceholder, index int) string {
 
 	// return default placeholder
 	return string(plc)
+}
+
+// valueToDBValue takes a value and returns a value that can be used in a
+// database query. If the value is a struct or a pointer to a struct, it
+// converts the struct to a JSON string and returns the JSON string. If the
+// value is not a struct or a pointer to a struct, it returns the original
+// value.
+func valueToDBValue(value any) any {
+	// get reflect value
+	v := reflect.ValueOf(value)
+
+	// check if the value is a struct or a pointer to a struct
+	if v.Kind() == reflect.Ptr &&
+		v.Elem().Kind() == reflect.Struct {
+		// convert struct to JSON
+		jd, err := json.Marshal(v.Elem().Interface())
+		if err != nil {
+			return nil
+		}
+
+		// return json string
+		return jd
+	}
+
+	// return the original value if not a struct or pointer to a struct
+	return value
 }
