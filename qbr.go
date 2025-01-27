@@ -23,13 +23,13 @@ const (
 
 // Query builder model.
 type QueryBuilder struct {
-	selects       []Field
-	conditions    []Condition
-	orderBy       []OrderBy
-	data          []Data
-	limit         uint64
-	offset        uint64
-	operationType OperationType
+	selects    []Field
+	conditions []Condition
+	orderBy    []OrderBy
+	data       []Data
+	limit      uint64
+	offset     uint64
+	operation  OperationType
 }
 
 // New creates new query builder with given query type.
@@ -37,5 +37,10 @@ type QueryBuilder struct {
 // Returns created query builder.
 func New(t OperationType) *QueryBuilder {
 	// create and return query builder
-	return &QueryBuilder{operationType: t}
+	return &QueryBuilder{operation: t}
+}
+
+// GetOperation returns the operation type of the query builder.
+func (qb *QueryBuilder) GetOperation() OperationType {
+	return qb.operation
 }

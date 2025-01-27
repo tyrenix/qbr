@@ -40,7 +40,7 @@ var sqlOperators = map[OperatorType]string{
 // query type is not supported.
 func (qb *QueryBuilder) ToSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
 	// select need method for build
-	switch qb.operationType {
+	switch qb.operation {
 	case OperationRead:
 		return qb.toSelectSql(table, placeholder)
 	case OperationCreate:
@@ -50,7 +50,7 @@ func (qb *QueryBuilder) ToSql(table string, placeholder SqlPlaceholder) (string,
 	case OperationDelete:
 		return qb.toDeleteSql(table, placeholder)
 	default:
-		return "", nil, fmt.Errorf("unsupported query type: %v", qb.operationType)
+		return "", nil, fmt.Errorf("unsupported query type: %v", qb.operation)
 	}
 }
 

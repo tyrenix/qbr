@@ -32,7 +32,7 @@ func (qb *QueryBuilder) Set(data ...*Data) *QueryBuilder {
 		}
 
 		// check is ignore
-		if isFieldIgnored(d.Field, qb.operationType) {
+		if isFieldIgnored(d.Field, qb.operation) {
 			continue
 		}
 
