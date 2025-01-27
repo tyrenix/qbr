@@ -81,6 +81,12 @@ func (qb *QueryBuilder) toInsertSql(table string, placeholder SqlPlaceholder) (s
 		strings.Join(values, ", "),
 	)
 
+	// build returning fields
+	if len(qb.selects) > 0 {
+		// create returning fields
+		query += " RETURNING " + buildSelectFields(qb.selects)
+	}
+
 	// return query, params and success
 	return query, params, nil
 }
@@ -184,6 +190,12 @@ func (qb *QueryBuilder) toUpdateSql(table string, placeholder SqlPlaceholder) (s
 		query += " " + v
 	}
 
+	// build returning fields
+	if len(qb.selects) > 0 {
+		// create returning fields
+		query += " RETURNING " + buildSelectFields(qb.selects)
+	}
+
 	// return query, params and success
 	return query, params, nil
 }
@@ -214,6 +226,12 @@ func (qb *QueryBuilder) toDeleteSql(table string, placeholder SqlPlaceholder) (s
 	if v := buildSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
 		// add limit and offset
 		query += " " + v
+	}
+
+	// build returning fields
+	if len(qb.selects) > 0 {
+		// create returning fields
+		query += " RETURNING " + buildSelectFields(qb.selects)
 	}
 
 	// return query, params and success

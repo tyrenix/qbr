@@ -80,17 +80,24 @@ func WithDB(db string) FieldOption {
 	}
 }
 
-// WithIgnoredOperations sets the ignored operations for a Field model.
-func WithIgnoredOperations(ignored ...OperationType) FieldOption {
+// WithIgnoreOn returns a FieldOption that sets the ignored operations for a Field model.
+//
+// It takes a variable number of OperationType values as arguments, and returns a FieldOption that
+// appends each argument to the IgnoreOn field of the Field model. The returned FieldOption can be
+// used to configure a Field model created by NewField.
+func WithIgnoreOn(ignoreOn ...OperationType) FieldOption {
 	return func(f *Field) {
-		f.IgnoreOn = append(f.IgnoreOn, ignored...)
+		f.IgnoreOn = append(f.IgnoreOn, ignoreOn...)
 	}
 }
 
-// WithAggregationType sets the aggregation type for a Field model.
-func WithAggregationType(aggType AggregationType) FieldOption {
+// WithAggregation sets the aggregation type for a Field model.
+//
+// It takes an AggregationType and returns a FieldOption that sets the
+// Aggregation field of the Field model to the specified value.
+func WithAggregation(agg AggregationType) FieldOption {
 	return func(f *Field) {
-		f.Aggregation = aggType
+		f.Aggregation = agg
 	}
 }
 
