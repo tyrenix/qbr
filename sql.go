@@ -386,7 +386,7 @@ func buildSelectFields(fields []Field) string {
 	// iterate over the slice of fields
 	for _, field := range fields {
 		// check is contains in map
-		format, ok := sqlAggregationFormats[field.AggregationType]
+		format, ok := sqlAggregationFormats[field.Aggregation]
 		if !ok {
 			continue
 		}

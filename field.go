@@ -14,9 +14,9 @@ const (
 
 // Field model.
 type Field struct {
-	DB                string
-	AggregationType   AggregationType
-	IgnoredOperations []OperationType // Slice with ignored operations.
+	DB          string          // DB field name.
+	Aggregation AggregationType // Aggregation type.
+	IgnoreOn    []OperationType // Slice with ignored operations.
 }
 
 // NewField creates a new Field model with the specified options.
@@ -83,14 +83,14 @@ func WithDB(db string) FieldOption {
 // WithIgnoredOperations sets the ignored operations for a Field model.
 func WithIgnoredOperations(ignored ...OperationType) FieldOption {
 	return func(f *Field) {
-		f.IgnoredOperations = append(f.IgnoredOperations, ignored...)
+		f.IgnoreOn = append(f.IgnoreOn, ignored...)
 	}
 }
 
 // WithAggregationType sets the aggregation type for a Field model.
 func WithAggregationType(aggType AggregationType) FieldOption {
 	return func(f *Field) {
-		f.AggregationType = aggType
+		f.Aggregation = aggType
 	}
 }
 
@@ -99,8 +99,8 @@ func WithAggregationType(aggType AggregationType) FieldOption {
 // The returned Field model is equivalent to calling NewField("*").
 func NewAllField() *Field {
 	return &Field{
-		DB:              "*",
-		AggregationType: AggregationNone,
+		DB:          "*",
+		Aggregation: AggregationNone,
 	}
 }
 
@@ -112,8 +112,8 @@ func NewAllField() *Field {
 // Returns the created Field model with sum aggregation type.
 func NewSumField(field *Field) *Field {
 	return &Field{
-		DB:              field.DB,
-		AggregationType: AggregationSum,
+		DB:          field.DB,
+		Aggregation: AggregationSum,
 	}
 }
 
@@ -125,14 +125,7 @@ func NewSumField(field *Field) *Field {
 // Returns created Field model with count type.
 func NewCountField(field *Field) *Field {
 	return &Field{
-		DB:              field.DB,
-		AggregationType: AggregationCount,
-		// NewCountField creates new Field model with count type.
-		//
-		// It takes the existing Field model and creates a new one with the same
-		// DB field and with Type set to FieldCount.
-		//
-		// Returns created Field model with count type.
-		/*************  ✨ Codeium Command ⭐  *************/
-		/******  cb14a7ff-71c4-48e6-a52e-df0e5f0a3b70  *******/}
+		DB:          field.DB,
+		Aggregation: AggregationCount,
+	}
 }

@@ -52,7 +52,7 @@ func isZero(value any) bool {
 // it returns false.
 func isFieldIgnored(field *Field, queryType OperationType) bool {
 	// check is ignored
-	for _, ignoreOp := range field.IgnoredOperations {
+	for _, ignoreOp := range field.IgnoreOn {
 		if ignoreOp == queryType {
 			return true
 		}
@@ -105,8 +105,8 @@ func extractFieldFromStruct(ft reflect.StructField) *Field {
 		// get annotation
 		switch {
 		case strings.HasPrefix(block, string(QueryIgnoreOn)+"="):
-			field.IgnoredOperations = append(
-				field.IgnoredOperations,
+			field.IgnoreOn = append(
+				field.IgnoreOn,
 				extractIgnoredOperationOnAnnotations(block)...,
 			)
 		default:
