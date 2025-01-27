@@ -1,109 +1,109 @@
 package qbr
 
-// Condition type.
-type ConditionType int
+// Operator type.
+type OperatorType int
 
-// Condition types.
+// Operator types.
 const (
-	ConditionEqual ConditionType = iota
-	ConditionNotEqual
-	ConditionLessThan
-	ConditionGreaterThan
-	ConditionLessThanOrEqual
-	ConditionGreaterThanOrEqual
-	ConditionOr
-	ConditionAnd
+	OperatorEqual OperatorType = iota
+	OperatorNotEqual
+	OperatorLessThan
+	OperatorGreaterThan
+	OperatorLessThanOrEqual
+	OperatorGreaterThanOrEqual
+	OperatorOr
+	OperatorAnd
 )
 
 // Condition model.
 type Condition struct {
 	Field    *Field
-	Operator ConditionType
+	Operator OperatorType
 	Value    any
 }
 
-// Condition or.
+// Or returns a condition that checks if any of the given conditions are true.
 //
 // conds1 OR conds2 OR conds3 and so on
 func Or(conds ...Condition) Condition {
 	return Condition{
-		Operator: ConditionOr,
+		Operator: OperatorOr,
 		Value:    conds,
 	}
 }
 
-// Condition and.
+// And returns a condition that checks if all the given conditions are true.
 //
 // conds1 AND conds2 AND conds3 and so on
 func And(conds ...Condition) Condition {
 	return Condition{
-		Operator: ConditionAnd,
+		Operator: OperatorAnd,
 		Value:    conds,
 	}
 }
 
 // Condition for equals.
 //
-// field = val
+// Eq returns a condition that checks if the value of the given field is equal to the given value.
 func Eq(field *Field, val any) Condition {
 	return Condition{
 		Field:    field,
-		Operator: ConditionEqual,
+		Operator: OperatorEqual,
 		Value:    val,
 	}
 }
 
 // Condition for not equals.
 //
-// field != val
+// NoEq returns a condition that checks if the value of the given field is not equal to the given value.
 func NoEq(field *Field, val any) Condition {
 	return Condition{
 		Field:    field,
-		Operator: ConditionNotEqual,
+		Operator: OperatorNotEqual,
 		Value:    val,
 	}
 }
 
-// Condition for less than.
+// Lt returns a condition that checks if the value of the given field is less than the specified value.
 //
 // field < val
 func Lt(field *Field, val any) Condition {
 	return Condition{
 		Field:    field,
-		Operator: ConditionLessThan,
+		Operator: OperatorLessThan,
 		Value:    val,
 	}
 }
 
-// Condition for greater than.
+// Gt returns a condition that checks if the value of the given field is greater than the specified value.
 //
 // field > val
 func Gt(field *Field, val any) Condition {
 	return Condition{
 		Field:    field,
-		Operator: ConditionGreaterThan,
+		Operator: OperatorGreaterThan,
 		Value:    val,
 	}
 }
 
-// Condition for less than or equal.
+// LtOrEq returns a condition that checks if the value of the given field is less than or equal to the specified value.
 //
 // field <= val
 func LtOrEq(field *Field, val any) Condition {
 	return Condition{
 		Field:    field,
-		Operator: ConditionLessThanOrEqual,
+		Operator: OperatorLessThanOrEqual,
 		Value:    val,
 	}
 }
 
-// Condition for greater than or equal.
+// GtOrEq returns a condition that checks if the value of the given field is greater than or equal to the specified value.
 //
 // field >= val
 func GtOrEq(field *Field, val any) Condition {
 	return Condition{
 		Field:    field,
-		Operator: ConditionGreaterThanOrEqual,
+		Operator: OperatorGreaterThanOrEqual,
 		Value:    val,
 	}
 }
@@ -147,6 +147,11 @@ func removeZeroCondition(conds ...Condition) []Condition {
 			// add formatted conditions
 			result = append(result, cond)
 		default:
+			// check is not ignored
+			if isFieldIgnored(cond.Field, OperationRead) {
+				continue
+			}
+
 			// check is not zero
 			if !isZero(v) {
 				// add condition

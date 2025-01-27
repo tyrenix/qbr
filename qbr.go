@@ -1,39 +1,41 @@
 package qbr
 
-// Query builder annotation.
-type QueryBuilderAnnotationType string
+// Query annotation type.
+type QueryAnnotationType string
 
+// Query annotation types.
 const (
-	QueryBuilderIgnore QueryBuilderAnnotationType = "qbrIgnore"
-	QueryBuilderDB     QueryBuilderAnnotationType = "db"
+	QueryQbr      QueryAnnotationType = "qbr"
+	QueryDB       QueryAnnotationType = "db"
+	QueryIgnoreOn QueryAnnotationType = "ignore_on"
 )
 
-// Query builder type.
-type QueryBuilderType string
+// Operation type.
+type OperationType string
 
-// Query builder types.
+// Operation types.
 const (
-	QueryBuilderCreate QueryBuilderType = "create"
-	QueryBuilderRead   QueryBuilderType = "read"
-	QueryBuilderUpdate QueryBuilderType = "update"
-	QueryBuilderDelete QueryBuilderType = "delete"
+	OperationCreate OperationType = "create"
+	OperationRead   OperationType = "read"
+	OperationUpdate OperationType = "update"
+	OperationDelete OperationType = "delete"
 )
 
 // Query builder model.
 type QueryBuilder struct {
-	selects    []Field
-	conditions []Condition
-	orderBy    []OrderBy
-	data       []Data
-	limit      uint64
-	offset     uint64
-	queryType  QueryBuilderType
+	selects       []Field
+	conditions    []Condition
+	orderBy       []OrderBy
+	data          []Data
+	limit         uint64
+	offset        uint64
+	operationType OperationType
 }
 
 // New creates new query builder with given query type.
 //
 // Returns created query builder.
-func New(t QueryBuilderType) *QueryBuilder {
+func New(t OperationType) *QueryBuilder {
 	// create and return query builder
-	return &QueryBuilder{queryType: t}
+	return &QueryBuilder{operationType: t}
 }

@@ -2,13 +2,22 @@ package qbr
 
 import (
 	"reflect"
-	"strings"
 )
 
 // Data model.
 type Data struct {
 	Field *Field
 	Value any
+}
+
+// NewData creates a new Data instance with the specified field and value.
+// It initializes the Data model with the given field and value parameters,
+// and returns the constructed Data object.
+func NewData(field *Field, value any) *Data {
+	return &Data{
+		Field: field,
+		Value: value,
+	}
 }
 
 // Set adds the specified fields to the query builder's data list.
@@ -23,17 +32,7 @@ func (qb *QueryBuilder) Set(data ...*Data) *QueryBuilder {
 		}
 
 		// check is ignore
-		skip := false
-		for _, i := range d.Field.Ignore {
-			// this ignored, skip
-			if i == qb.queryType {
-				skip = true
-				break
-			}
-		}
-
-		// if skip
-		if skip {
+		if isFieldIgnored(d.Field, qb.operationType) {
 			continue
 		}
 
@@ -51,6 +50,7 @@ func (qb *QueryBuilder) Set(data ...*Data) *QueryBuilder {
 func (qb *QueryBuilder) SetStruct(s any) *QueryBuilder {
 	// extract data from struct
 	data := extractDataFromStruct(s)
+
 	// set data to query builder
 	return qb.Set(data...)
 }
@@ -96,63 +96,11 @@ func extractDataFromStruct(s any) []*Data {
 
 		// add data
 		data = append(data, NewData(
-			extractFieldFromStructAnnotation(ft),
+			extractFieldFromStruct(ft),
 			field.Interface(),
 		))
 	}
 
 	// return query builder
 	return data
-}
-
-// NewData creates a new Data instance with the specified field and value.
-// It initializes the Data model with the given field and value parameters,
-// and returns the constructed Data object.
-func NewData(field *Field, value any) *Data {
-	return &Data{
-		Field: field,
-		Value: value,
-	}
-}
-
-// extractFieldFromStructAnnotation takes a reflect.StructField and extracts the
-// "db" tag from the field's struct tag. If the tag is not present, it returns nil.
-// Otherwise, it creates a new Field instance with the extracted tag value and
-// returns it.
-func extractFieldFromStructAnnotation(ft reflect.StructField) *Field {
-	// get tags from field annotation
-	db := ft.Tag.Get(string(QueryBuilderDB))
-
-	// check is not empty
-	if db == "" {
-		return nil
-	}
-
-	// ignores
-	var ignores []QueryBuilderType
-
-	// extract ignore
-	for _, ignore := range strings.Split(ft.Tag.Get(string(QueryBuilderIgnore)), ",") {
-		// check is empty
-		if ignore == "" {
-			continue
-		}
-
-		// add ignore
-		ignores = append(
-			ignores,
-			QueryBuilderType(ignore),
-		)
-	}
-
-	// create field
-	field := NewField(
-		FieldDB(db),
-	)
-
-	// add ignores
-	field.Ignore = ignores
-
-	// return fields
-	return field
 }
