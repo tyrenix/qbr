@@ -120,9 +120,16 @@ func (qb *QueryBuilder) Where(conds ...Condition) *QueryBuilder {
 	return qb
 }
 
-// GetConditions returns the conditions of the query builder.
+// GetConditions returns the conditions set for the query builder, or an empty slice if no conditions have been set.
 func (qb *QueryBuilder) GetConditions() []Condition {
-	return qb.conditions
+	// conditions for returning
+	conds := make([]Condition, len(qb.conditions))
+
+	// copy query builder conditions
+	copy(conds, qb.conditions)
+
+	// return copy conditions
+	return conds
 }
 
 // removeZeroCondition filters out conditions that have zero values from the provided

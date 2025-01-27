@@ -13,7 +13,15 @@ func (qb *QueryBuilder) Select(fields ...*Field) *QueryBuilder {
 	return qb
 }
 
-// GetSelectFields returns the select list of the query builder, which is a slice of Field models.
+// GetSelectFields returns a copy of the query builder's select fields.
+// The returned slice is a copy of the internal selects slice and is safe to modify.
 func (qb *QueryBuilder) GetSelectFields() []Field {
-	return qb.selects
+	// conditions for returning
+	fields := make([]Field, len(qb.selects))
+
+	// copy query builder conditions
+	copy(fields, qb.selects)
+
+	// return copy conditions
+	return fields
 }

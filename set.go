@@ -62,8 +62,10 @@ func (qb *QueryBuilder) SetStruct(s any) *QueryBuilder {
 func (qb *QueryBuilder) GetData() []Data {
 	// init new data slice
 	data := make([]Data, len(qb.data))
+
 	// copy slice
 	copy(data, qb.data)
+
 	// return data
 	return data
 }
