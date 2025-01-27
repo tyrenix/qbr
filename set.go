@@ -55,6 +55,19 @@ func (qb *QueryBuilder) SetStruct(s any) *QueryBuilder {
 	return qb.Set(data...)
 }
 
+// GetData returns the data list of the QueryBuilder.
+// The returned data list is a copy of the QueryBuilder's internal data list.
+// The data list is used when executing INSERT, UPDATE, and SET queries.
+// The data list is never nil.
+func (qb *QueryBuilder) GetData() []Data {
+	// init new data slice
+	data := make([]Data, len(qb.data))
+	// copy slice
+	copy(data, qb.data)
+	// return data
+	return data
+}
+
 // extractDataFromStruct extracts fields from a given struct and returns them as a slice of Data.
 // If the input is a pointer, it dereferences it before processing. The function checks if the input
 // is a valid struct type and iterates through its fields. For each field, it retrieves the field's

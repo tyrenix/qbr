@@ -25,3 +25,8 @@ func (qb *QueryBuilder) OrderBy(params ...*OrderBy) *QueryBuilder {
 	// return query builder
 	return qb
 }
+
+// GetOrderBy returns the order by parameters of the query, or an empty slice if no order by has been set.
+func (qb *QueryBuilder) GetOrderBy() []OrderBy {
+	return qb.orderBy
+}

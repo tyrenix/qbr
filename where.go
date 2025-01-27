@@ -120,6 +120,11 @@ func (qb *QueryBuilder) Where(conds ...Condition) *QueryBuilder {
 	return qb
 }
 
+// GetConditions returns the conditions of the query builder.
+func (qb *QueryBuilder) GetConditions() []Condition {
+	return qb.conditions
+}
+
 // removeZeroCondition filters out conditions that have zero values from the provided
 // slice of conditions. It recursively processes nested conditions and removes any
 // condition with a zero value, as determined by the isZero function. The function

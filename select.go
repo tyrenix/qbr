@@ -12,3 +12,8 @@ func (qb *QueryBuilder) Select(fields ...*Field) *QueryBuilder {
 	// return query builder
 	return qb
 }
+
+// GetSelectFields returns the select list of the query builder, which is a slice of Field models.
+func (qb *QueryBuilder) GetSelectFields() []Field {
+	return qb.selects
+}
