@@ -184,12 +184,6 @@ func (qb *QueryBuilder) toUpdateSql(table string, placeholder SqlPlaceholder) (s
 		params = condsParams
 	}
 
-	// add limit and offset
-	if v := buildSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
-		// add limit and offset
-		query += " " + v
-	}
-
 	// build returning fields
 	if len(qb.selects) > 0 {
 		// create returning fields
@@ -220,12 +214,6 @@ func (qb *QueryBuilder) toDeleteSql(table string, placeholder SqlPlaceholder) (s
 		query += " WHERE " + conds
 		// add condition params to params
 		params = append(params, condsParams...)
-	}
-
-	// add limit and offset
-	if v := buildSqlLimitAndOffset(qb.limit, qb.offset); v != "" {
-		// add limit and offset
-		query += " " + v
 	}
 
 	// build returning fields
