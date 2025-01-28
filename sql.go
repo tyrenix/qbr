@@ -107,15 +107,18 @@ func (qb *QueryBuilder) toSelectSql(table string, placeholder SqlPlaceholder) (s
 	// create params
 	var params []any
 
-	// add conditions
-	cond, condParams, err := buildSqlConditions(qb.conditions, placeholder, nil)
-	if err != nil {
-		return "", nil, err
-	}
+	// is conditions exists add conditions and params
+	if len(qb.conditions) > 0 {
+		// create conditions
+		cond, condParams, err := buildSqlConditions(qb.conditions, placeholder, nil)
+		if err != nil {
+			return "", nil, err
+		}
 
-	// add conditions and params
-	query += " WHERE " + cond
-	params = append(params, condParams...)
+		// add conditions
+		query += " WHERE " + cond
+		params = append(params, condParams...)
+	}
 
 	// add sort
 	if len(qb.orderBy) > 0 {
