@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/tyrenix/qbr/domain"
 )
 
 // SqlPlaceholder type.
@@ -18,47 +20,47 @@ const (
 
 // sqlAggregationFormats is a map that defines SQL aggregation formats for different AggregationTypes.
 // It currently supports all supported aggregation types.
-var sqlAggregationFormats = map[AggregationType]string{
-	AggregationNone:  "%s",
-	AggregationCount: "COUNT(%s)",
-	AggregationSum:   "SUM(%s)",
+var sqlAggregationFormats = map[domain.AggregationType]string{
+	domain.AggregationNone:  "%s",
+	domain.AggregationCount: "COUNT(%s)",
+	domain.AggregationSum:   "SUM(%s)",
 }
 
 // sqlOperators is a map that defines SQL operators for different OperatorTypes.
 // It currently supports all supported operators.
-var sqlOperators = map[OperatorType]string{
-	OperatorAnd:                "AND",
-	OperatorOr:                 "OR",
-	OperatorEqual:              "=",
-	OperatorNotEqual:           "!=",
-	OperatorLessThan:           "<",
-	OperatorGreaterThan:        ">",
-	OperatorLessThanOrEqual:    "<=",
-	OperatorGreaterThanOrEqual: ">=",
+var sqlOperators = map[domain.OperatorType]string{
+	domain.OperatorAnd:                "AND",
+	domain.OperatorOr:                 "OR",
+	domain.OperatorEqual:              "=",
+	domain.OperatorNotEqual:           "!=",
+	domain.OperatorLessThan:           "<",
+	domain.OperatorGreaterThan:        ">",
+	domain.OperatorLessThanOrEqual:    "<=",
+	domain.OperatorGreaterThanOrEqual: ">=",
 }
 
-// ToSql translates the QueryBuilder into a SQL query string, its parameters, and an error if the query
+// ToSql translates the Query into a SQL query string, its parameters, and an error if the query
 // could not be built. It supports SELECT, INSERT, UPDATE, and DELETE queries. It returns an error if the
 // query type is not supported.
-func (qb *QueryBuilder) ToSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
+func (qb *Query) ToSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
 	// select need method for build
 	switch qb.operation {
-	case OperationRead:
+	case domain.OperationRead:
 		return qb.toSelectSql(table, placeholder)
-	case OperationCreate:
+	case domain.OperationCreate:
 		return qb.toInsertSql(table, placeholder)
-	case OperationUpdate:
+	case domain.OperationUpdate:
 		return qb.toUpdateSql(table, placeholder)
-	case OperationDelete:
+	case domain.OperationDelete:
 		return qb.toDeleteSql(table, placeholder)
 	default:
 		return "", nil, fmt.Errorf("unsupported query type: %v", qb.operation)
 	}
 }
 
-// toInsertSql creates a SQL INSERT query from the QueryBuilder's data. It returns the query string,
+// toInsertSql creates a SQL INSERT query from the Query's data. It returns the query string,
 // the parameters for the query, and an error if the query could not be built.
-func (qb *QueryBuilder) toInsertSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
+func (qb *Query) toInsertSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
 	var columns []string
 	var values []string
 	var params []any
@@ -99,10 +101,10 @@ func (qb *QueryBuilder) toInsertSql(table string, placeholder SqlPlaceholder) (s
 	return query, params, nil
 }
 
-// toSelectSql creates a SQL SELECT query from the QueryBuilder's select list, conditions,
+// toSelectSql creates a SQL SELECT query from the Query's select list, conditions,
 // sort, limit, and offset. It returns the query string, the parameters for the query,
 // and an error if the query could not be built.
-func (qb *QueryBuilder) toSelectSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
+func (qb *Query) toSelectSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
 	// create main query
 	query := fmt.Sprintf(
 		"SELECT %s FROM %s",
@@ -154,9 +156,9 @@ func (qb *QueryBuilder) toSelectSql(table string, placeholder SqlPlaceholder) (s
 	return query, params, nil
 }
 
-// toUpdateSql creates a SQL UPDATE query from the QueryBuilder's data. It returns the query string,
+// toUpdateSql creates a SQL UPDATE query from the Query's data. It returns the query string,
 // the parameters for the query, and an error if the query could not be built.
-func (qb *QueryBuilder) toUpdateSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
+func (qb *Query) toUpdateSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
 	var sets []string
 	var params []any
 
@@ -211,9 +213,9 @@ func (qb *QueryBuilder) toUpdateSql(table string, placeholder SqlPlaceholder) (s
 	return query, params, nil
 }
 
-// toDeleteSql creates a SQL DELETE query from the QueryBuilder's data. It returns the query string,
+// toDeleteSql creates a SQL DELETE query from the Query's data. It returns the query string,
 // the parameters for the query, and an error if the query could not be built.
-func (qb *QueryBuilder) toDeleteSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
+func (qb *Query) toDeleteSql(table string, placeholder SqlPlaceholder) (string, []any, error) {
 	var params []any
 
 	// create base query
@@ -267,7 +269,7 @@ func buildSqlLimitAndOffset(limit, offset uint64) string {
 // plc is the placeholder character to use, and params is the parameter slice to append to.
 // join is the operator to use to join the condition strings, default is "AND".
 // It returns the query string, the updated parameter slice, and an error if any.
-func buildSqlConditions(conds []Condition, plc SqlPlaceholder, params []any, join ...string) (string, []any, error) {
+func buildSqlConditions(conds []domain.Condition, plc SqlPlaceholder, params []any, join ...string) (string, []any, error) {
 	// check check conditions count
 	if len(conds) == 0 {
 		return "", nil, nil
@@ -285,7 +287,7 @@ func buildSqlConditions(conds []Condition, plc SqlPlaceholder, params []any, joi
 	// condition join
 	for _, cond := range conds {
 		switch cond.Operator {
-		case OperatorAnd, OperatorOr: // for logical operator: OR, AND
+		case domain.OperatorAnd, domain.OperatorOr: // for logical operator: OR, AND
 			// create sub query and params
 			subQuery, subParams, err := handleLogicalCondition(cond, params, plc, cond.Operator)
 			if err != nil {
@@ -335,9 +337,9 @@ func buildSqlConditions(conds []Condition, plc SqlPlaceholder, params []any, joi
 // for each condition within the logical group. The resulting SQL string and
 // updated parameter list are returned, along with an error if any occurs
 // during the process.
-func handleLogicalCondition(cond Condition, params []any, plc SqlPlaceholder, lgOp OperatorType) (string, []any, error) {
+func handleLogicalCondition(cond domain.Condition, params []any, plc SqlPlaceholder, lgOp domain.OperatorType) (string, []any, error) {
 	// assert type
-	value, ok := cond.Value.([]Condition)
+	value, ok := cond.Value.([]domain.Condition)
 	if !ok {
 		return "", nil, fmt.Errorf("invalid value for logical operator %d", lgOp)
 	}
@@ -347,7 +349,7 @@ func handleLogicalCondition(cond Condition, params []any, plc SqlPlaceholder, lg
 
 	// sub join
 	subJoin := "AND"
-	if lgOp == OperatorOr {
+	if lgOp == domain.OperatorOr {
 		subJoin = "OR"
 	}
 
@@ -375,12 +377,12 @@ func handleLogicalCondition(cond Condition, params []any, plc SqlPlaceholder, lg
 // with the placeholder. If the value type or operator is not supported, it returns an error.
 //
 // The function returns the SQL condition string, the condition's value as a parameter, and an error if any.
-func handleSimpleCondition(cond Condition, plc SqlPlaceholder, paramIndex int) (string, any, error) {
+func handleSimpleCondition(cond domain.Condition, plc SqlPlaceholder, paramIndex int) (string, any, error) {
 	// check if the value type is ValueType
-	if v, ok := cond.Value.(ValueType); ok {
-		if v == ValueNull {
+	if v, ok := cond.Value.(domain.ValueType); ok {
+		if v == domain.ValueNull {
 			// handle null value condition
-			if cond.Operator == OperatorNotEqual {
+			if cond.Operator == domain.OperatorNotEqual {
 				return fmt.Sprintf("%s IS NOT NULL", getDBFieldName(cond.Field)), nil, nil
 			}
 
@@ -407,7 +409,7 @@ func handleSimpleCondition(cond Condition, plc SqlPlaceholder, paramIndex int) (
 
 // getSqlOperator returns the SQL operator associated with the given OperatorType.
 // If the operator is not supported, it returns an empty string.
-func getSqlOperator(op OperatorType) string {
+func getSqlOperator(op domain.OperatorType) string {
 	// get operator
 	v, ok := sqlOperators[op]
 	if !ok {
@@ -424,7 +426,7 @@ func getSqlOperator(op OperatorType) string {
 // exists, it retrieves the database field name and applies the format, adding the result
 // to the list of select fields. The function returns a comma-separated string of the
 // formatted select fields.
-func buildSelectFields(fields []Field) string {
+func buildSelectFields(fields []domain.Field) string {
 	// fields
 	var result []string
 
@@ -452,7 +454,7 @@ func buildSelectFields(fields []Field) string {
 
 // getDBFieldName takes a Field object and returns the string value of its DB
 // field. This is the field name in the database that the field corresponds to.
-func getDBFieldName(field *Field) string {
+func getDBFieldName(field *domain.Field) string {
 	return string(field.DB)
 }
 
@@ -483,9 +485,9 @@ func buildDBPlaceholder(plc SqlPlaceholder, index int) string {
 // value.
 func valueToDBValue(value any) (any, error) {
 	// is value is ValueType
-	if v, ok := value.(ValueType); ok {
+	if v, ok := value.(domain.ValueType); ok {
 		// is null value return null
-		if v == ValueNull {
+		if v == domain.ValueNull {
 			return nil, nil
 		}
 

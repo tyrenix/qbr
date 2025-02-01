@@ -1,46 +1,42 @@
 package qbr
 
-// Sort sort type.
-type SortType string
+import "github.com/tyrenix/qbr/domain"
 
-// Sort types.
-const (
-	SortAsc  SortType = "ASC"
-	SortDesc SortType = "DESC"
-)
+// NewSortDesc creates a new instance of domain.Sort with descending sort type.
+//
+// It takes a pointer to a domain.Field as an argument and returns a pointer
+// to the newly created domain.Sort object with the provided field and
+// descending sort type.
+func NewSortDesc(field *domain.Field) *domain.Sort {
+	return &domain.Sort{
+		Field: field,
+		Type:  domain.SortDesc,
+	}
+}
 
-// Sort model
-type Sort struct {
-	Field *Field
-	Type  SortType
+// NewSortAsc creates a new instance of domain.Sort with ascending sort type.
+//
+// It takes a pointer to a domain.Field as an argument and returns a pointer
+// to a domain.Sort object with the specified field and SortType set to SortAsc.
+func NewSortAsc(field *domain.Field) *domain.Sort {
+	return &domain.Sort{
+		Field: field,
+		Type:  domain.SortAsc,
+	}
 }
 
 // Sort add sort.
-func (qb *QueryBuilder) Sort(params ...*Sort) *QueryBuilder {
-	// add sort params to query
-	for _, param := range params {
-		qb.sort = append(qb.sort, *param)
+func (qb *Query) Sort(sorts ...*domain.Sort) *Query {
+	// add sorts to query
+	for _, sort := range sorts {
+		qb.sort = append(qb.sort, *sort)
 	}
 
-	// return query builder
+	// return query
 	return qb
 }
 
 // GetSort returns the sort parameters of the query, or an empty slice if no order by has been set.
-func (qb *QueryBuilder) GetSort() []Sort {
+func (qb *Query) GetSort() []domain.Sort {
 	return qb.sort
-}
-
-// NewSort creates a new Sort model.
-//
-// It takes a Field model and a SortType (either SortAsc or SortDesc) as parameters, and returns a new Sort model
-// with the given Field and SortType.
-//
-// The returned Sort model is ready to use and can be passed to the Sort method of a QueryBuilder in order to add
-// sorting to a query.
-func NewSort(field *Field, sortType SortType) *Sort {
-	return &Sort{
-		Field: field,
-		Type:  sortType,
-	}
 }

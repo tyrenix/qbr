@@ -1,33 +1,13 @@
 package qbr
 
-// Operator type.
-type OperatorType int
-
-// Operator types.
-const (
-	OperatorEqual OperatorType = iota
-	OperatorNotEqual
-	OperatorLessThan
-	OperatorGreaterThan
-	OperatorLessThanOrEqual
-	OperatorGreaterThanOrEqual
-	OperatorOr
-	OperatorAnd
-)
-
-// Condition model.
-type Condition struct {
-	Field    *Field
-	Operator OperatorType
-	Value    any
-}
+import "github.com/tyrenix/qbr/domain"
 
 // Or returns a condition that checks if any of the given conditions are true.
 //
 // conds1 OR conds2 OR conds3 and so on
-func Or(conds ...Condition) Condition {
-	return Condition{
-		Operator: OperatorOr,
+func Or(conds ...domain.Condition) domain.Condition {
+	return domain.Condition{
+		Operator: domain.OperatorOr,
 		Value:    conds,
 	}
 }
@@ -35,9 +15,9 @@ func Or(conds ...Condition) Condition {
 // And returns a condition that checks if all the given conditions are true.
 //
 // conds1 AND conds2 AND conds3 and so on
-func And(conds ...Condition) Condition {
-	return Condition{
-		Operator: OperatorAnd,
+func And(conds ...domain.Condition) domain.Condition {
+	return domain.Condition{
+		Operator: domain.OperatorAnd,
 		Value:    conds,
 	}
 }
@@ -45,10 +25,10 @@ func And(conds ...Condition) Condition {
 // Condition for equals.
 //
 // Eq returns a condition that checks if the value of the given field is equal to the given value.
-func Eq(field *Field, val any) Condition {
-	return Condition{
+func Eq(field *domain.Field, val any) domain.Condition {
+	return domain.Condition{
 		Field:    field,
-		Operator: OperatorEqual,
+		Operator: domain.OperatorEqual,
 		Value:    val,
 	}
 }
@@ -56,10 +36,10 @@ func Eq(field *Field, val any) Condition {
 // Condition for not equals.
 //
 // NoEq returns a condition that checks if the value of the given field is not equal to the given value.
-func NoEq(field *Field, val any) Condition {
-	return Condition{
+func NoEq(field *domain.Field, val any) domain.Condition {
+	return domain.Condition{
 		Field:    field,
-		Operator: OperatorNotEqual,
+		Operator: domain.OperatorNotEqual,
 		Value:    val,
 	}
 }
@@ -67,10 +47,10 @@ func NoEq(field *Field, val any) Condition {
 // Lt returns a condition that checks if the value of the given field is less than the specified value.
 //
 // field < val
-func Lt(field *Field, val any) Condition {
-	return Condition{
+func Lt(field *domain.Field, val any) domain.Condition {
+	return domain.Condition{
 		Field:    field,
-		Operator: OperatorLessThan,
+		Operator: domain.OperatorLessThan,
 		Value:    val,
 	}
 }
@@ -78,10 +58,10 @@ func Lt(field *Field, val any) Condition {
 // Gt returns a condition that checks if the value of the given field is greater than the specified value.
 //
 // field > val
-func Gt(field *Field, val any) Condition {
-	return Condition{
+func Gt(field *domain.Field, val any) domain.Condition {
+	return domain.Condition{
 		Field:    field,
-		Operator: OperatorGreaterThan,
+		Operator: domain.OperatorGreaterThan,
 		Value:    val,
 	}
 }
@@ -89,10 +69,10 @@ func Gt(field *Field, val any) Condition {
 // LtOrEq returns a condition that checks if the value of the given field is less than or equal to the specified value.
 //
 // field <= val
-func LtOrEq(field *Field, val any) Condition {
-	return Condition{
+func LtOrEq(field *domain.Field, val any) domain.Condition {
+	return domain.Condition{
 		Field:    field,
-		Operator: OperatorLessThanOrEqual,
+		Operator: domain.OperatorLessThanOrEqual,
 		Value:    val,
 	}
 }
@@ -100,30 +80,33 @@ func LtOrEq(field *Field, val any) Condition {
 // GtOrEq returns a condition that checks if the value of the given field is greater than or equal to the specified value.
 //
 // field >= val
-func GtOrEq(field *Field, val any) Condition {
-	return Condition{
+func GtOrEq(field *domain.Field, val any) domain.Condition {
+	return domain.Condition{
 		Field:    field,
-		Operator: OperatorGreaterThanOrEqual,
+		Operator: domain.OperatorGreaterThanOrEqual,
 		Value:    val,
 	}
 }
 
-// Where add filters with condition.
-func (qb *QueryBuilder) Where(conds ...Condition) *QueryBuilder {
+// Where adds the specified conditions to the QueryBuilder's conditions list.
+// If a condition's Value is nil or zero, it is ignored and not added.
+// Additionally, if the condition's Field is ignored for the current query type, it is also ignored and not added.
+// The method returns the modified QueryBuilder instance for method chaining.
+func (qb *Query) Where(conds ...domain.Condition) *Query {
 	// add remove zero condition s
 	qb.conditions = append(
 		qb.conditions,
 		removeZeroCondition(conds...)...,
 	)
 
-	// return query builder
+	// return query
 	return qb
 }
 
 // GetConditions returns the conditions set for the query builder, or an empty slice if no conditions have been set.
-func (qb *QueryBuilder) GetConditions() []Condition {
+func (qb *Query) GetConditions() []domain.Condition {
 	// conditions for returning
-	conds := make([]Condition, len(qb.conditions))
+	conds := make([]domain.Condition, len(qb.conditions))
 
 	// copy query builder conditions
 	copy(conds, qb.conditions)
@@ -132,23 +115,20 @@ func (qb *QueryBuilder) GetConditions() []Condition {
 	return conds
 }
 
-// removeZeroCondition removes zero conditions from the given conditions.
+// removeZeroCondition takes a variable number of conditions and returns a new slice
+// with the following changes:
+//  1. Conditions with a Value of nil or a zero value are removed.
+//  2. Conditions with a Field that is ignored for the current query type are removed.
+//  3. Conditions with a Value of domain.ValueNull are removed if the condition is not
+//     an aggregation or an equality/inequality check.
 //
-// It takes a variable number of Condition values as arguments, and returns a slice of Condition
-// values with the zero conditions removed.
-//
-// Zero conditions are conditions that have a zero value or a null pointer value.
-//
-// The function also handles the case where the condition's value is a slice of Condition values,
-// in which case it recursively calls itself to remove zero conditions from the sub-conditions.
-//
-// The function returns a new slice of Condition values with the zero conditions removed.
-func removeZeroCondition(conds ...Condition) []Condition {
+// The method returns the modified slice of conditions.
+func removeZeroCondition(conds ...domain.Condition) []domain.Condition {
 	// conditions for return
-	result := []Condition{}
+	result := []domain.Condition{}
 
 	// stack
-	stack := append([]Condition{}, conds...)
+	stack := append([]domain.Condition{}, conds...)
 
 	// check all conditions
 	for len(stack) > 0 {
@@ -159,7 +139,7 @@ func removeZeroCondition(conds ...Condition) []Condition {
 
 		// select condition type
 		switch v := cond.Value.(type) {
-		case []Condition:
+		case []domain.Condition:
 			// set new removed conditions
 			cond.Value = removeZeroCondition(v...)
 
@@ -167,17 +147,17 @@ func removeZeroCondition(conds ...Condition) []Condition {
 			result = append(result, cond)
 		default:
 			// check is not ignored
-			if isFieldIgnored(cond.Field, OperationRead) {
+			if isFieldIgnored(cond.Field, domain.OperationRead) {
 				continue
 			}
 
 			// check if system conditional and handle value null case
 			switch t := cond.Value.(type) {
-			case ValueType:
-				if t == ValueNull {
+			case domain.ValueType:
+				if t == domain.ValueNull {
 					// skip if value is null and not supported aggregation or operator
-					if cond.Field.Aggregation != AggregationNone ||
-						(cond.Operator != OperatorEqual && cond.Operator != OperatorNotEqual) {
+					if cond.Field.Aggregation != domain.AggregationNone ||
+						(cond.Operator != domain.OperatorEqual && cond.Operator != domain.OperatorNotEqual) {
 						continue
 					}
 				}

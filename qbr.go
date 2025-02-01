@@ -1,49 +1,53 @@
 package qbr
 
-// Query annotation type.
-type QueryAnnotationType string
+import "github.com/tyrenix/qbr/domain"
 
-// Query annotation types.
-const (
-	QueryQbr      QueryAnnotationType = "qbr"
-	QueryDB       QueryAnnotationType = "db"
-	QueryIgnoreOn QueryAnnotationType = "ignore_on"
-)
-
-// Operation type.
-type OperationType string
-
-// Operation types.
-const (
-	OperationCreate OperationType = "create"
-	OperationRead   OperationType = "read"
-	OperationUpdate OperationType = "update"
-	OperationDelete OperationType = "delete"
-)
-
-// Query builder model.
-type QueryBuilder struct {
-	selects    []Field
-	conditions []Condition
-	sort       []Sort
-	data       []Data
+// Query model.
+type Query struct {
+	selects    []domain.Field
+	conditions []domain.Condition
+	sort       []domain.Sort
+	data       []domain.Data
 	limit      uint64
 	offset     uint64
-	operation  OperationType
+	operation  domain.OperationType
 }
 
 // New creates new query builder with given query type.
 //
 // Returns created query builder.
-func New(t OperationType) *QueryBuilder {
+func New(t domain.OperationType) *Query {
 	// create and return query builder
-	return &QueryBuilder{
+	return &Query{
 		operation: t,
-		selects:   []Field{*NewAllField()},
+		selects:   []domain.Field{*NewAllField()},
 	}
 }
 
-// GetOperation returns the operation type of the query builder.
-func (qb *QueryBuilder) GetOperation() OperationType {
-	return qb.operation
+// NewCreate creates a new query builder with OperationCreate type.
+//
+// Returns the created query builder.
+func NewCreate() *Query {
+	return New(domain.OperationCreate)
+}
+
+// NewRead creates a new query builder with OperationRead type.
+//
+// Returns the created query builder.
+func NewRead() *Query {
+	return New(domain.OperationRead)
+}
+
+// NewUpdate creates new query builder with OperationUpdate type.
+//
+// Returns created query builder.
+func NewUpdate() *Query {
+	return New(domain.OperationUpdate)
+}
+
+// NewDelete creates new query builder with OperationDelete type.
+//
+// Returns created query builder.
+func NewDelete() *Query {
+	return New(domain.OperationDelete)
 }

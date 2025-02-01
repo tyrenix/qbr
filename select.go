@@ -1,28 +1,31 @@
 package qbr
 
-// Select adds the specified fields to the query builder's select list.
-// Each field is appended to the selects slice within the QueryBuilder.
-// Returns the modified QueryBuilder instance for method chaining.
-func (qb *QueryBuilder) Select(fields ...*Field) *QueryBuilder {
+import "github.com/tyrenix/qbr/domain"
+
+// Select sets the fields to be selected in the query. If no fields are
+// specified, all fields are selected. The fields parameter is a variable
+// argument list, so you can pass in any number of fields or an array/slice
+// of fields. The method returns the QueryBuilder instance to support method
+// chaining.
+func (qb *Query) Select(fields ...*domain.Field) *Query {
 	// set select to null
 	qb.selects = nil
 
-	// add fields to query builder
+	// add fields to query
 	for _, field := range fields {
 		qb.selects = append(qb.selects, *field)
 	}
 
-	// return query builder
+	// return query
 	return qb
 }
 
-// GetSelectFields returns a copy of the query builder's select fields.
-// The returned slice is a copy of the internal selects slice and is safe to modify.
-func (qb *QueryBuilder) GetSelectFields() []Field {
+// GetSelectFields returns the select fields set for the query builder, or an empty slice if no select fields have been set.
+func (qb *Query) GetSelectFields() []domain.Field {
 	// conditions for returning
-	fields := make([]Field, len(qb.selects))
+	fields := make([]domain.Field, len(qb.selects))
 
-	// copy query builder conditions
+	// copy query  conditions
 	copy(fields, qb.selects)
 
 	// return copy conditions
