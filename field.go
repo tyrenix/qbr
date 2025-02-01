@@ -1,6 +1,8 @@
 package qbr
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // Aggregation type.
 type AggregationType int
@@ -135,4 +137,17 @@ func NewCountField(field *Field) *Field {
 		DB:          field.DB,
 		Aggregation: AggregationCount,
 	}
+}
+
+// IsFieldEqual checks if two Field objects are equal by comparing their
+// DB field names. If either of the input Field objects is nil, the function
+// returns false.
+func IsFieldEqual(field1, field2 *Field) bool {
+	// is fields is nil
+	if field1 == nil || field2 == nil {
+		return false
+	}
+
+	// check is field equals
+	return field1.DB == field2.DB
 }

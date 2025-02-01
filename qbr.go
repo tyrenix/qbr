@@ -25,7 +25,7 @@ const (
 type QueryBuilder struct {
 	selects    []Field
 	conditions []Condition
-	orderBy    []OrderBy
+	sort       []Sort
 	data       []Data
 	limit      uint64
 	offset     uint64

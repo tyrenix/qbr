@@ -121,12 +121,12 @@ func (qb *QueryBuilder) toSelectSql(table string, placeholder SqlPlaceholder) (s
 	}
 
 	// add sort
-	if len(qb.orderBy) > 0 {
+	if len(qb.sort) > 0 {
 		// order by query string
 		orderByStr := " ORDER BY"
 
 		// create order by
-		for _, orderBy := range qb.orderBy {
+		for _, orderBy := range qb.sort {
 			orderByStr += fmt.Sprintf(
 				" %s %s",
 				getDBFieldName(orderBy.Field),
