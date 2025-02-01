@@ -37,7 +37,10 @@ type QueryBuilder struct {
 // Returns created query builder.
 func New(t OperationType) *QueryBuilder {
 	// create and return query builder
-	return &QueryBuilder{operation: t}
+	return &QueryBuilder{
+		operation: t,
+		selects:   []Field{*NewAllField()},
+	}
 }
 
 // GetOperation returns the operation type of the query builder.

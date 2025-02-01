@@ -132,10 +132,17 @@ func (qb *QueryBuilder) GetConditions() []Condition {
 	return conds
 }
 
-// removeZeroCondition filters out conditions that have zero values from the provided
-// slice of conditions. It recursively processes nested conditions and removes any
-// condition with a zero value, as determined by the isZero function. The function
-// returns a slice of conditions that do not contain any zero values.
+// removeZeroCondition removes zero conditions from the given conditions.
+//
+// It takes a variable number of Condition values as arguments, and returns a slice of Condition
+// values with the zero conditions removed.
+//
+// Zero conditions are conditions that have a zero value or a null pointer value.
+//
+// The function also handles the case where the condition's value is a slice of Condition values,
+// in which case it recursively calls itself to remove zero conditions from the sub-conditions.
+//
+// The function returns a new slice of Condition values with the zero conditions removed.
 func removeZeroCondition(conds ...Condition) []Condition {
 	// conditions for return
 	result := []Condition{}
@@ -164,13 +171,24 @@ func removeZeroCondition(conds ...Condition) []Condition {
 				continue
 			}
 
+			// check if system conditional and handle value null case
+			switch t := cond.Value.(type) {
+			case ValueType:
+				if t == ValueNull {
+					// skip if value is null and not supported aggregation or operator
+					if cond.Field.Aggregation != AggregationNone ||
+						(cond.Operator != OperatorEqual && cond.Operator != OperatorNotEqual) {
+						continue
+					}
+				}
+			}
+
 			// check is not zero
 			if !isZero(v) {
 				// add condition
 				result = append(result, cond)
 			}
 		}
-
 	}
 
 	// return conditions

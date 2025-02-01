@@ -4,6 +4,9 @@ package qbr
 // Each field is appended to the selects slice within the QueryBuilder.
 // Returns the modified QueryBuilder instance for method chaining.
 func (qb *QueryBuilder) Select(fields ...*Field) *QueryBuilder {
+	// set select to null
+	qb.selects = nil
+
 	// add fields to query builder
 	for _, field := range fields {
 		qb.selects = append(qb.selects, *field)

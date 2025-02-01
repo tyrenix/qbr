@@ -71,8 +71,14 @@ func (qb *QueryBuilder) toInsertSql(table string, placeholder SqlPlaceholder) (s
 		// add value
 		values = append(values, buildDBPlaceholder(placeholder, len(params)+1))
 
+		// create database value
+		v, err := valueToDBValue(data.Value)
+		if err != nil {
+			return "", nil, err
+		}
+
 		// add params
-		params = append(params, valueToDBValue(data.Value))
+		params = append(params, v)
 	}
 
 	// create query
@@ -168,8 +174,14 @@ func (qb *QueryBuilder) toUpdateSql(table string, placeholder SqlPlaceholder) (s
 			),
 		)
 
+		// create database value
+		v, err := valueToDBValue(data.Value)
+		if err != nil {
+			return "", nil, err
+		}
+
 		// add params
-		params = append(params, valueToDBValue(data.Value))
+		params = append(params, v)
 	}
 
 	// add to query set data
@@ -298,8 +310,11 @@ func buildSqlConditions(conds []Condition, plc SqlPlaceholder, params []any, joi
 
 			// add condition
 			condStrs = append(condStrs, conditionStr)
-			// add param
-			params = append(params, param)
+
+			// is param not nil add param
+			if param != nil {
+				params = append(params, param)
+			}
 		}
 	}
 
@@ -351,24 +366,43 @@ func handleLogicalCondition(cond Condition, params []any, plc SqlPlaceholder, lg
 	return strings.Join(subQueries, fmt.Sprintf(" %s ", subJoin)), params, nil
 }
 
-// handleSimpleCondition creates a simple condition for a given condition object.
-// plc is the placeholder character to use, and paramIndex is the index of the parameter
-// in the parameter slice. It returns the condition string, the parameter value, and an error.
-// If the operator is unsupported, it returns an error.
+// handleSimpleCondition processes a simple condition within a SQL query, generating a SQL condition string
+// and its corresponding parameter.
+//
+// It takes a Condition object, a SqlPlaceholder for parameter substitution, and a parameter index.
+// The function checks if the condition's value is of type ValueType and handles null values accordingly.
+// It retrieves the SQL operator for the given condition's operator, and constructs the SQL condition string
+// with the placeholder. If the value type or operator is not supported, it returns an error.
+//
+// The function returns the SQL condition string, the condition's value as a parameter, and an error if any.
 func handleSimpleCondition(cond Condition, plc SqlPlaceholder, paramIndex int) (string, any, error) {
-	// get sql operator
+	// check if the value type is ValueType
+	if v, ok := cond.Value.(ValueType); ok {
+		if v == ValueNull {
+			// handle null value condition
+			if cond.Operator == OperatorNotEqual {
+				return fmt.Sprintf("%s IS NOT NULL", getDBFieldName(cond.Field)), nil, nil
+			}
+
+			// return conditional string and success
+			return fmt.Sprintf("%s IS NULL", getDBFieldName(cond.Field)), nil, nil
+		}
+
+		// return error
+		return "", nil, fmt.Errorf("unsupported value type: %d", v)
+	}
+
+	// get SQL operator
 	operator := getSqlOperator(cond.Operator)
 	if operator == "" {
 		return "", nil, fmt.Errorf("unsupported operator: %d", cond.Operator)
 	}
 
-	// create placeholder
-	placeholder := buildDBPlaceholder(plc, paramIndex)
-	// create condition
-	conditionStr := fmt.Sprintf("%s %s %s", getDBFieldName(cond.Field), operator, placeholder)
+	// create condition string with placeholder
+	condStr := fmt.Sprintf("%s %s %s", getDBFieldName(cond.Field), operator, buildDBPlaceholder(plc, paramIndex))
 
-	// return condition string, val and success
-	return conditionStr, cond.Value, nil
+	// return condition string, value and success
+	return condStr, cond.Value, nil
 }
 
 // getSqlOperator returns the SQL operator associated with the given OperatorType.
@@ -436,12 +470,29 @@ func buildDBPlaceholder(plc SqlPlaceholder, index int) string {
 	return string(plc)
 }
 
-// valueToDBValue takes a value and returns a value that can be used in a
-// database query. If the value is a struct or a pointer to a struct, it
-// converts the struct to a JSON string and returns the JSON string. If the
-// value is not a struct or a pointer to a struct, it returns the original
+// valueToDBValue takes a value and returns a value that can be used in a SQL query
+// and an error if the value is not supported.
+//
+// If the value is of type ValueType, it returns the string "NULL" if the value
+// is ValueNull, otherwise it returns an error.
+//
+// If the value is a struct or a pointer to a struct, it converts the value to
+// a JSON string and returns it.
+//
+// If the value is not a struct or a pointer to a struct, it returns the original
 // value.
-func valueToDBValue(value any) any {
+func valueToDBValue(value any) (any, error) {
+	// is value is ValueType
+	if v, ok := value.(ValueType); ok {
+		// is null value return null
+		if v == ValueNull {
+			return nil, nil
+		}
+
+		// return nil
+		return nil, fmt.Errorf("unsupported value type: %d", v)
+	}
+
 	// get reflect value
 	v := reflect.ValueOf(value)
 
@@ -449,15 +500,15 @@ func valueToDBValue(value any) any {
 	if v.Kind() == reflect.Ptr &&
 		v.Elem().Kind() == reflect.Struct {
 		// convert struct to JSON
-		jd, err := json.Marshal(v.Elem().Interface())
+		j, err := json.Marshal(v.Elem().Interface())
 		if err != nil {
-			return nil
+			return nil, err
 		}
 
 		// return json string
-		return jd
+		return j, nil
 	}
 
 	// return the original value if not a struct or pointer to a struct
-	return value
+	return value, nil
 }
