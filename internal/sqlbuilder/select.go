@@ -2,6 +2,7 @@ package sqlbuilder
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tyrenix/qbr/domain"
 )
@@ -48,16 +49,17 @@ func CreateSelectSql(qb Query, table string, placeholder domain.SqlPlaceholder) 
 		orderByStr := " ORDER BY"
 
 		// create order by
-		for _, sort := range sorts {
-			orderByStr += fmt.Sprintf(
-				" %s %s",
+		sortClauses := make([]string, len(sorts))
+		for i, sort := range sorts {
+			sortClauses[i] = fmt.Sprintf(
+				"%s %s",
 				getFieldName(sort.Field),
 				sort.Type,
 			)
 		}
 
 		// add order by
-		query += orderByStr
+		query += orderByStr + " " + strings.Join(sortClauses, ", ")
 	}
 
 	// add limit and offset
