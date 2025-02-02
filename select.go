@@ -20,8 +20,8 @@ func (qb *Query) Select(fields ...*domain.Field) *Query {
 	return qb
 }
 
-// GetSelectFields returns the select fields set for the query builder, or an empty slice if no select fields have been set.
-func (qb *Query) GetSelectFields() []domain.Field {
+// GetSelects returns the select fields set for the query builder, or an empty slice if no select fields have been set.
+func (qb *Query) GetSelects() []domain.Field {
 	// conditions for returning
 	fields := make([]domain.Field, len(qb.selects))
 

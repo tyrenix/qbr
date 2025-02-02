@@ -1,8 +1,6 @@
 package qbr
 
 import (
-	"reflect"
-
 	"github.com/tyrenix/qbr/domain"
 )
 
@@ -61,55 +59,5 @@ func (qb *Query) GetData() []domain.Data {
 	copy(data, qb.data)
 
 	// return data
-	return data
-}
-
-// extractDataFromStruct extracts fields from a given struct and returns them as a slice of Data.
-// If the input is a pointer, it dereferences it before processing. The function checks if the input
-// is a valid struct type and iterates through its fields. For each field, it retrieves the field's
-// value and annotation, and constructs a Data object. Fields with a nil value or that do not have
-// a "db" annotation are ignored. The resulting slice of Data objects is returned, representing the
-// struct's fields ready for inclusion in a query.
-func extractDataFromStruct(s any) []*domain.Data {
-	// struct value
-	val := reflect.ValueOf(s)
-	// struct type
-	t := reflect.TypeOf(s)
-
-	// check is pointer
-	if val.Kind() == reflect.Ptr {
-		// check is nil
-		if val.IsNil() {
-			return nil
-		}
-
-		// dereference pointer
-		val = val.Elem()
-		t = t.Elem()
-	}
-
-	// check is struct
-	if val.Kind() != reflect.Struct {
-		return nil
-	}
-
-	// create data slice
-	var data []*domain.Data
-
-	// we go through the fields of the structure
-	for i := 0; i < val.NumField(); i++ {
-		// struct field
-		field := val.Field(i)
-		// field type
-		ft := t.Field(i)
-
-		// add data
-		data = append(data, NewData(
-			extractFieldFromStruct(ft),
-			field.Interface(),
-		))
-	}
-
-	// return query
 	return data
 }

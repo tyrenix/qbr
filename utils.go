@@ -120,6 +120,56 @@ func extractFieldFromStruct(ft reflect.StructField) *domain.Field {
 	return field
 }
 
+// extractDataFromStruct extracts fields from a given struct and returns them as a slice of Data.
+// If the input is a pointer, it dereferences it before processing. The function checks if the input
+// is a valid struct type and iterates through its fields. For each field, it retrieves the field's
+// value and annotation, and constructs a Data object. Fields with a nil value or that do not have
+// a "db" annotation are ignored. The resulting slice of Data objects is returned, representing the
+// struct's fields ready for inclusion in a query.
+func extractDataFromStruct(s any) []*domain.Data {
+	// struct value
+	val := reflect.ValueOf(s)
+	// struct type
+	t := reflect.TypeOf(s)
+
+	// check is pointer
+	if val.Kind() == reflect.Ptr {
+		// check is nil
+		if val.IsNil() {
+			return nil
+		}
+
+		// dereference pointer
+		val = val.Elem()
+		t = t.Elem()
+	}
+
+	// check is struct
+	if val.Kind() != reflect.Struct {
+		return nil
+	}
+
+	// create data slice
+	var data []*domain.Data
+
+	// we go through the fields of the structure
+	for i := 0; i < val.NumField(); i++ {
+		// struct field
+		field := val.Field(i)
+		// field type
+		ft := t.Field(i)
+
+		// add data
+		data = append(data, NewData(
+			extractFieldFromStruct(ft),
+			field.Interface(),
+		))
+	}
+
+	// return query
+	return data
+}
+
 // extractIgnoredOperationOnAnnotations extracts the ignored operations from the given block string.
 //
 // The block string is expected to be in the format "ignore_on=<operation1>,<operation2>,...".
@@ -151,4 +201,64 @@ func extractIgnoredOperationOnAnnotations(block string) []domain.OperationType {
 
 	// return ignored operations
 	return ignOps
+}
+
+// removeZeroCondition takes a variable number of conditions and returns a new slice
+// with the following changes:
+//  1. Conditions with a Value of nil or a zero value are removed.
+//  2. Conditions with a Field that is ignored for the current query type are removed.
+//  3. Conditions with a Value of domain.ValueNull are removed if the condition is not
+//     an aggregation or an equality/inequality check.
+//
+// The method returns the modified slice of conditions.
+func removeZeroCondition(conds ...domain.Condition) []domain.Condition {
+	// conditions for return
+	result := []domain.Condition{}
+
+	// stack
+	stack := append([]domain.Condition{}, conds...)
+
+	// check all conditions
+	for len(stack) > 0 {
+		// condition
+		cond := stack[0]
+		// remove condition from stack
+		stack = stack[1:]
+
+		// select condition type
+		switch v := cond.Value.(type) {
+		case []domain.Condition:
+			// set new removed conditions
+			cond.Value = removeZeroCondition(v...)
+
+			// add formatted conditions
+			result = append(result, cond)
+		default:
+			// check is not ignored
+			if isFieldIgnored(cond.Field, domain.OperationRead) {
+				continue
+			}
+
+			// check if system conditional and handle value null case
+			switch t := cond.Value.(type) {
+			case domain.ValueType:
+				if t == domain.ValueNull {
+					// skip if value is null and not supported aggregation or operator
+					if cond.Field.Aggregation != domain.AggregationNone ||
+						(cond.Operator != domain.OperatorEqual && cond.Operator != domain.OperatorNotEqual) {
+						continue
+					}
+				}
+			}
+
+			// check is not zero
+			if !isZero(v) {
+				// add condition
+				result = append(result, cond)
+			}
+		}
+	}
+
+	// return conditions
+	return result
 }
