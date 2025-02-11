@@ -25,23 +25,16 @@ func CreateUpdateSql(qb Query, table string, placeholder domain.SqlPlaceholder) 
 
 	// create add update params
 	for _, data := range setData {
-		// add data to sets
-		sets = append(
-			sets,
-			fmt.Sprintf("%s = %s",
-				getFieldName(data.Field),
-				getPlaceholder(placeholder, len(params)+1),
-			),
-		)
-
-		// create database value
-		v, err := valueToDBValue(data.Value)
+		// create set data
+		field, plc, value, err := buildSetData(data, placeholder, len(params)+1)
 		if err != nil {
 			return "", nil, err
 		}
 
-		// add params
-		params = append(params, v)
+		// add data to sets
+		sets = append(sets, fmt.Sprintf("%s = %s", field, plc))
+		// add value to params
+		params = append(params, value)
 	}
 
 	// add to query set data

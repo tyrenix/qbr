@@ -21,20 +21,18 @@ func CreateInsertSql(qb Query, table string, placeholder domain.SqlPlaceholder) 
 
 	// create main query
 	for _, data := range setData {
-		// add database column
-		columns = append(columns, getFieldName(data.Field))
-
-		// add value
-		values = append(values, getPlaceholder(placeholder, len(params)+1))
-
-		// create database value
-		v, err := valueToDBValue(data.Value)
+		// create sql data
+		field, plc, value, err := buildSetData(data, placeholder, len(params)+1)
 		if err != nil {
 			return "", nil, err
 		}
 
-		// add params
-		params = append(params, v)
+		// add database field
+		columns = append(columns, field)
+		// add placeholder value
+		values = append(values, plc)
+		// add value to params
+		params = append(params, value)
 	}
 
 	// create query
