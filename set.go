@@ -61,3 +61,113 @@ func (qb *Query) GetData() []domain.Data {
 	// return data
 	return data
 }
+
+// Add creates a Modification model that applies the addition operator
+// to the value of the specified field. It takes a pointer to a domain.Field and
+// a value of any type as arguments. The returned Modification model is
+// configured to add the given value to the field's value.
+func Add(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationAdd,
+	}
+}
+
+// Subtract creates a Modification model that applies the subtraction operator
+// to the value of the specified field. It takes a pointer to a domain.Field and
+// a value of any type as arguments. The returned Modification model is
+// configured to subtract the given value from the field's value.
+func Subtract(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationSubtract,
+	}
+}
+
+// Multiply creates a Modification model that applies the multiplication operator
+// to the value of the specified field. It takes a pointer to a domain.Field and
+// a value of any type as arguments and returns a pointer to the created
+// domain.Modification object with the field, multiplication operator, and
+// value.
+func Multiply(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationMultiply,
+	}
+}
+
+// Divide creates a Modification model that applies the division operator
+// to the value of the specified field. It takes a pointer to a domain.Field and
+// a value of any type as arguments and returns a pointer to the created
+// domain.Modification object with the field, division operator, and value.
+func Divide(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationDivide,
+	}
+}
+
+// BitwiseAnd creates a Modification model that applies the bitwise AND
+// operator to the value of the specified field. It takes a pointer to a
+// domain.Field and a value of any type as arguments and returns a pointer to
+// the created domain.Modification object with the field, AND operator, and
+// value.
+func BitwiseAnd(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationBitwiseAnd,
+	}
+}
+
+// BitwiseOr creates a Modification model that applies the bitwise OR
+// operator to the value of the specified field. It takes a pointer to a
+// domain.Field and a value of any type as arguments and returns a pointer to
+// the created domain.Modification object with the field, OR operator, and
+// value.
+func BitwiseOr(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationBitwiseOr,
+	}
+}
+
+// BitwiseXor creates a Modification model that applies the bitwise XOR
+// operator to the value of the specified field. It takes a pointer to a
+// domain.Field and a value of any type as arguments and returns a pointer to
+// the created domain.Modification object with the field, XOR operator, and
+// value.
+func BitwiseXor(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationBitwiseXor,
+	}
+}
+
+// ShiftLeft returns a Modification model with the given field and value.
+// It applies the bitwise shift left operator to the value of the specified
+// field.
+func ShiftLeft(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationShiftLeft,
+	}
+}
+
+// ShiftRight returns a Modification model with the given field and value.
+// It applies the bitwise shift right operator to the value of the specified
+// field.
+func ShiftRight(field *domain.Field, value any) *domain.Modification {
+	return &domain.Modification{
+		Field:    field,
+		Value:    value,
+		Operator: domain.ModificationShiftRight,
+	}
+}
