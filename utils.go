@@ -251,11 +251,19 @@ func removeZeroCondition(conds ...domain.Condition) []domain.Condition {
 				}
 			}
 
-			// check is not zero
-			if !isZero(v) {
-				// add condition
-				result = append(result, cond)
+			// // check is not zero
+			// if !isZero(v) {
+			// 	// add condition
+			// 	result = append(result, cond)
+			// }
+
+			// is nil, set null value
+			if v == nil {
+				cond.Value = domain.ValueNull
 			}
+
+			// add condition
+			result = append(result, cond)
 		}
 	}
 
