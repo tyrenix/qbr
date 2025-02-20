@@ -7,10 +7,18 @@ import (
 // NewData creates a new instance of domain.Data with the specified field and value.
 // It takes a pointer to a domain.Field and a value of any type as arguments.
 // Returns a pointer to the newly created domain.Data object containing the provided field and value.
-func NewData(field *domain.Field, value any) *domain.Data {
+func NewData(field *domain.Field, value any, acceptZero ...bool) *domain.Data {
+	// is accept
+	acpZero := true
+	if len(acceptZero) > 0 {
+		acpZero = acceptZero[0]
+	}
+
+	// create data
 	return &domain.Data{
-		Field: field,
-		Value: value,
+		Field:      field,
+		Value:      value,
+		AcceptZero: acpZero,
 	}
 }
 
@@ -22,7 +30,7 @@ func (qb *Query) Set(data ...*domain.Data) *Query {
 	// add data to query
 	for _, d := range data {
 		// check is value is nil
-		if d.Field == nil || isZero(d.Value) {
+		if d.Field == nil || (isZero(d.Value) && !d.AcceptZero) {
 			continue
 		}
 

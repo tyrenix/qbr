@@ -163,6 +163,7 @@ func extractDataFromStruct(s any) []*domain.Data {
 		data = append(data, NewData(
 			extractFieldFromStruct(ft),
 			field.Interface(),
+			false,
 		))
 	}
 
