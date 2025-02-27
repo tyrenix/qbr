@@ -68,6 +68,9 @@ func CreateSelectSql(qb Query, table string, placeholder domain.SqlPlaceholder) 
 		query += " " + v
 	}
 
+	// add suffix
+	query = buildSuffix(query, qb.GetSuffix())
+
 	// return query, params and success
 	return query, params, nil
 }

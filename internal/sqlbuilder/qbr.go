@@ -9,4 +9,5 @@ type Query interface {
 	GetSort() []domain.Sort
 	GetLimit() uint64
 	GetOffset() uint64
+	GetSuffix() string
 }

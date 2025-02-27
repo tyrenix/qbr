@@ -49,6 +49,9 @@ func CreateInsertSql(qb Query, table string, placeholder domain.SqlPlaceholder) 
 		query += " RETURNING " + buildSelects(selects)
 	}
 
+	// add suffix
+	query = buildSuffix(query, qb.GetSuffix())
+
 	// return query, params and success
 	return query, params, nil
 }

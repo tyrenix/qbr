@@ -4,13 +4,14 @@ import "github.com/tyrenix/qbr/domain"
 
 // Query model.
 type Query struct {
+	operation  domain.OperationType
 	selects    []domain.Field
 	conditions []domain.Condition
 	sort       []domain.Sort
 	data       []domain.Data
 	limit      uint64
 	offset     uint64
-	operation  domain.OperationType
+	suffix     string
 }
 
 // New creates new query builder with given query type.
