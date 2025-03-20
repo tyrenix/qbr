@@ -27,15 +27,9 @@ func isZero(value any) bool {
 		return v.IsNil()
 	}
 
-	// is string check on empty
-	if v.Kind() == reflect.String {
-		return v.String() == ""
-	}
-
-	// is number check on zero value
-	if (v.Kind() >= reflect.Int && v.Kind() <= reflect.Int64) ||
-		(v.Kind() >= reflect.Float32 && v.Kind() <= reflect.Float64) {
-		return v.IsZero()
+	// is zero
+	if v.IsZero() {
+		return true
 	}
 
 	// for Time types
