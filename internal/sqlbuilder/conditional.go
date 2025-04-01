@@ -42,7 +42,7 @@ func buildConditions(conds []domain.Condition, plc domain.SqlPlaceholder, params
 			params = subParams
 		default: // for simple operator, >, <, <=, and so on
 			// create condition
-			conditionStr, param, err := handleSimpleCondition(cond, plc, len(params)+1)
+			conditionStr, subParams, err := handleSimpleCondition(cond, params, plc)
 			if err != nil {
 				return "", nil, err
 			}
@@ -54,10 +54,9 @@ func buildConditions(conds []domain.Condition, plc domain.SqlPlaceholder, params
 
 			// add condition
 			condStrs = append(condStrs, conditionStr)
-
-			// is param not nil add param
-			if param != nil {
-				params = append(params, param)
+			// add sub params
+			if subParams != nil {
+				params = subParams
 			}
 		}
 	}
@@ -119,7 +118,7 @@ func handleLogicalCondition(cond domain.Condition, params []any, plc domain.SqlP
 // with the placeholder. If the value type or operator is not supported, it returns an error.
 //
 // The function returns the SQL condition string, the condition's value as a parameter, and an error if any.
-func handleSimpleCondition(cond domain.Condition, plc domain.SqlPlaceholder, paramIndex int) (string, any, error) {
+func handleSimpleCondition(cond domain.Condition, params []any, plc domain.SqlPlaceholder) (string, []any, error) {
 	// check if the value type is ValueType
 	if v, ok := cond.Value.(domain.ValueType); ok {
 		if v == domain.ValueNull {
@@ -142,9 +141,29 @@ func handleSimpleCondition(cond domain.Condition, plc domain.SqlPlaceholder, par
 		return "", nil, fmt.Errorf("unsupported operator: %d", cond.Operator)
 	}
 
+	// create value
+	val := ""
+	if cond.Operator == domain.OperatorIn {
+		// assert to slice
+		if v, ok := cond.Value.([]any); ok {
+			// create placeholders
+			p := []string{}
+			for _, v := range v {
+				p = append(p, getPlaceholder(plc, len(params)+1))
+				params = append(params, v)
+			}
+
+			// create values
+			val = fmt.Sprintf("(%s)", strings.Join(p, ", "))
+		}
+	} else {
+		val = getPlaceholder(plc, len(params)+1)
+		params = append(params, cond.Value)
+	}
+
 	// create condition string with placeholder
-	condStr := fmt.Sprintf("%s %s %s", getFieldName(cond.Field), operator, getPlaceholder(plc, paramIndex))
+	condStr := fmt.Sprintf("%s %s %s", getFieldName(cond.Field), operator, val)
 
 	// return condition string, value and success
-	return condStr, cond.Value, nil
+	return condStr, params, nil
 }

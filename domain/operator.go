@@ -11,6 +11,7 @@ const (
 	OperatorGreaterThan
 	OperatorLessThanOrEqual
 	OperatorGreaterThanOrEqual
-	OperatorOr
 	OperatorAnd
+	OperatorOr
+	OperatorIn
 )

@@ -21,6 +21,7 @@ var sqlOperators = map[domain.OperatorType]string{
 	domain.OperatorGreaterThan:        ">",
 	domain.OperatorLessThanOrEqual:    "<=",
 	domain.OperatorGreaterThanOrEqual: ">=",
+	domain.OperatorIn:                 "IN",
 }
 
 // sqlModifications is a map that defines SQL modifications for different ModificationTypes.

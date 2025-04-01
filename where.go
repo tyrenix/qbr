@@ -88,6 +88,17 @@ func GtOrEq(field *domain.Field, val any) domain.Condition {
 	}
 }
 
+// In returns a condition that checks if the value of the given field is in the specified values.
+//
+// field IN (val[0], val[1], ...)
+func In(field *domain.Field, val ...any) domain.Condition {
+	return domain.Condition{
+		Field:    field,
+		Operator: domain.OperatorIn,
+		Value:    val,
+	}
+}
+
 // Where adds the specified conditions to the QueryBuilder's conditions list.
 // If a condition's Value is nil or zero, it is ignored and not added.
 // Additionally, if the condition's Field is ignored for the current query type, it is also ignored and not added.
