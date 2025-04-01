@@ -9,6 +9,7 @@ type Query struct {
 	conditions []domain.Condition
 	sort       []domain.Sort
 	data       []domain.Data
+	lock       bool
 	limit      uint64
 	offset     uint64
 	suffix     string

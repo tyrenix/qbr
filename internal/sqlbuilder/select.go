@@ -71,6 +71,12 @@ func CreateSelectSql(qb Query, table string, placeholder domain.SqlPlaceholder) 
 	// add suffix
 	query = buildSuffix(query, qb.GetSuffix())
 
+	// add lock is need
+	if qb.IsLock() {
+		// add lock
+		query += " FOR UPDATE"
+	}
+
 	// return query, params and success
 	return query, params, nil
 }

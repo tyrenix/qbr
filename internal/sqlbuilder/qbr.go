@@ -10,4 +10,5 @@ type Query interface {
 	GetLimit() uint64
 	GetOffset() uint64
 	GetSuffix() string
+	IsLock() bool
 }
